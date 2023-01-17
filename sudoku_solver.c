@@ -9,6 +9,7 @@ int main(void){
     if(board == NULL){
         return 1;
     }
+
     printf("solving sudoku puzzle...\n");
     solve(board, 0, 0);
 
@@ -27,44 +28,49 @@ board_t* initalize_board(){
         return NULL;
     }
     
-    int BUF_SIZE = 64, counter = 0;
+    int BUF_SIZE = 64, line_counter = 0;
     char BUF[BUF_SIZE];
 
     board_t* board = (board_t*) malloc(sizeof(board_t));
     
     for (int i = 0; i < BOARD_SIZE; i++){
-        for (int y = 0; y < BOARD_SIZE; y++){
-            board->board[i][y] = 0;
+        for (int j = 0; j < BOARD_SIZE; j++){
+            board->board[i][j] = 0;
         }
     }
 
     while (fgets(BUF, BUF_SIZE, fp) != NULL){
-        
-        if (++counter > 9){
+
+        if (++line_counter > 9){
+
             printf("Invalid input size, has to be 9 lines\n");
             free(board);
             free(fp);
             return NULL;
         }
         if(strlen(BUF) != 10){
-            printf("INvalid size");
+
+            printf("Invalid size for line %d\n", line_counter);
             free(fp);
             free(board);
             return NULL;
         }
+
         for (int i = 0; i < BOARD_SIZE; i++){
-            if(BUF[i] < 48 || BUF[i] > 57){
+            if(BUF[i] < '0' || BUF[i] > '9'){
+
                 printf("Invalid input, has to be a number\n");
                 free(board);
                 free(fp);
                 return NULL;
             }
-            board->board[counter-1][i] = (int)BUF[i] - 48;
+            board->board[line_counter-1][i] = (int)BUF[i] - '0';
         } 
     }
     free(fp);
     
-    if(counter != 9){
+    if(line_counter != 9){
+
         printf("Invalid size, has to be 9 lines :(\n");
         free(board);
         return NULL;
@@ -79,12 +85,14 @@ void display_board(board_t* board){
     printf("%s", bar);
 
     for (int i = 0; i < BOARD_SIZE; i++){
-        for (int y = 0; y < BOARD_SIZE; y++){
-            if(y != 0 && y % BOX_SIZE == 0){
+        for (int j = 0; j < BOARD_SIZE; j++){
+
+            if(j != 0 && j % BOX_SIZE == 0){
                 printf("| ");
             }
-            printf("%d ", board->board[i][y]);
+            printf("%d ", board->board[i][j]);
         }
+
         if(i != 0 && (i+1) % BOX_SIZE == 0){
             printf("%s", bar);
         } else {
@@ -94,23 +102,29 @@ void display_board(board_t* board){
 }
 
 int solve(board_t* board, int row, int col){
+
     if (row == 9){
         return 0;
     }
+
     int BUF[BOARD_SIZE] = { 0 };
     if(board->board[row][col] != 0){
+
         if (col >= 8){
             return solve(board, row + 1, 0);
         } else {
             return solve(board, row, col+1);
         }
     } else {
+
         board->board[row][col] = 0;
         if(find_missing_numbers(row, col, board, BUF, BOARD_SIZE) == 0){
             return 1;
         }
+
         for(int i = 0; i < BOARD_SIZE; i++){
             if(BUF[i] == 0){
+
                 // try inserting the missing number and see if it works
                 board->board[row][col] = i+1;
                 if(col >= 8 && solve(board, row + 1, 0) == 0){
@@ -120,6 +134,7 @@ int solve(board_t* board, int row, int col){
                 }
             }
         }    
+
         board->board[row][col] = 0; 
         return 1;
     }
@@ -134,45 +149,47 @@ int find_missing_numbers(int row, int col, board_t* board, int* BUF, int size){
     }
 
     for (int row_box = 0; row_box < BOX_SIZE; row_box++){
-    for (int col_box = 0; col_box < BOX_SIZE; col_box++){
-        
-        int row_start = row_box*BOX_SIZE, row_end = (row_box+1) * BOX_SIZE,
-            col_start = col_box*BOX_SIZE, col_end = (col_box+1) * BOX_SIZE;
+        for (int col_box = 0; col_box < BOX_SIZE; col_box++){
+            
+            int row_start = row_box*BOX_SIZE, row_end = (row_box+1) * BOX_SIZE,
+                col_start = col_box*BOX_SIZE, col_end = (col_box+1) * BOX_SIZE;
 
-        // look for the same square
-        if (row >= row_start && row < row_end
-            && col >= col_start && col < ((col_box+1) * BOX_SIZE)){
-                    
-            // check everyin in same square
-            for (int i = row_start; i < row_end; i++){
-                for (int y = col_start; y < col_end; y++){
-                    if (board->board[i][y] != 0){
-                        if (BUF[board->board[i][y] - 1] == 0)
-                            count--;
-                        BUF[board->board[i][y] - 1] = 1;
+            // look for the same square
+            if (row >= row_start && row < row_end
+                && col >= col_start && col < ((col_box+1) * BOX_SIZE)){
+                        
+                // check everyin in same square
+                for (int i = row_start; i < row_end; i++){
+                    for (int j = col_start; j < col_end; j++){
+                        if (board->board[i][j] != 0){
+                            if (BUF[board->board[i][j] - 1] == 0)
+                                count--;
+                            BUF[board->board[i][j] - 1] = 1;
+                        }
                     }
                 }
-            }
-            
-            // now check row + col
-            for (int i = 0; i < BOARD_SIZE; i++){
-                for (int y = 0; y < BOARD_SIZE; y++){
-                    if (i >= row_start && i < row_end && y >= col_start && y < col_end)
-                        continue;
-                    
-                    if(i == row || y == col){
-                        if (board->board[i][y] != 0){
-                            if (BUF[board->board[i][y] - 1] == 0)
-                                count--;
-                            BUF[board->board[i][y] - 1] = 1;
-                        } 
+                
+                // now check row + col
+                for (int i = 0; i < BOARD_SIZE; i++){
+                    for (int j = 0; j < BOARD_SIZE; j++){
+                        if (i >= row_start && i < row_end && j >= col_start && j < col_end){
+                            continue;
+                        }
+                        
+                        if(i == row || j == col){
+                            if (board->board[i][j] != 0){
+                                if (BUF[board->board[i][j] - 1] == 0){
+                                    count--;
+                                }
+                                BUF[board->board[i][j] - 1] = 1;
+                            } 
+                        }
                     }
                 }
             }
         }
-    }}
+    }
     
     return count;
 }
-
 
