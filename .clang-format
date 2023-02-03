@@ -1,0 +1,8 @@
+---
+BasedOnStyle: LLVM
+AlignAfterOpenBracket: DontAlign
+IndentWidth: '4'
+PointerAlignment: Right
+UseTab: Never
+
+---
